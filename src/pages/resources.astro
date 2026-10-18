@@ -62,23 +62,23 @@ let mangoBytes: MangoByte[] = [];
 
 try {
   const params = new URLSearchParams({
-  "where[_status][equals]": "published",
-  "where[categories][contains]": "1",
-  sort: "-publishedAt",
-  limit: "20",
-  depth: "1",
-});
+    "where[slug][equals]": slug,
+    "where[_status][equals]": "published",
+    "where[categories][contains]": "1",
+    limit: "1",
+    depth: "1",
+  });
 
-const response = await fetch(`${API_URL}/api/posts?${params}`);
+  const response = await fetch(`${API_URL}/api/posts?${params}`);
 
   if (response.ok) {
     const data: { docs?: MangoByte[] } = await response.json();
-    mangoBytes = data.docs ?? [];
+    post = data.docs?.[0] ?? null;
   } else {
-    console.warn(`Mango Bytes CMS returned ${response.status}`);
+    console.warn(`Mango Byte CMS returned ${response.status}`);
   }
 } catch (error) {
-  console.error("Unable to fetch Mango Bytes:", error);
+  console.error("Unable to fetch Mango Byte:", error);
 }
 
 if (pageData.status === "rejected" || researchSourceData.status === "rejected")
@@ -356,11 +356,11 @@ const navItems = [
               </h2>
             
               <p class="text-muted mb-8">
-                Short insights and updates from the CIB Mango Tree community.
+                Bite-sized snapshots of coordinated inauthentic behavior examples, campaigns, and tactics in the news.
               </p>
             
               {mangoBytes.length === 0 && (
-                <p class="text-muted mb-6">Mango Bytes articles are coming soon.</p>
+                <p class="text-muted mb-6">Mango Bytes snapshots are coming soon.</p>
               )}
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -373,9 +373,9 @@ const navItems = [
                       {post.title}
                     </h3>
             
-                    {post.excerpt && (
+                    {post.meta?.description && (
                       <p class="text-muted text-sm mb-4">
-                        {post.excerpt}
+                        {post.meta.description}
                       </p>
                     )}
             

@@ -1,0 +1,49 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { getMangoBytes, formatMangoDate } from "@lib/mangoBytes";
+export const prerender = false;
+
+const rawPage = Astro.url.searchParams.get("page") ?? "1";
+const currentPage = /^[1-9]\d*$/.test(rawPage) && Number.isSafeInteger(Number(rawPage)) ? Number(rawPage) : 1;
+let result: Awaited<ReturnType<typeof getMangoBytes>> | null = null;
+let failed = false;
+try {
+  result = await getMangoBytes({ limit: 12, page: currentPage });
+} catch (error) {
+  console.error("Unable to load Mango Bytes:", error);
+  failed = true;
+  Astro.response.status = 503;
+}
+---
+
+<Layout>
+  <main class="max-w-6xl mx-auto px-6 py-16">
+    <a href="/resources#mango-bytes" class="text-mango-green-dark font-semibold hover:underline">← Back to Resources</a>
+    <h1 class="text-4xl md:text-5xl font-bold mt-10 mb-6">Mango Bytes</h1>
+    <p class="text-muted mb-10 text-lg">Bite-sized analysis of coordinated inauthentic behavior, emerging tactics, and efforts to detect manipulation online.</p>
+    {failed ? (
+      <p role="status" class="text-muted">We couldn’t load the articles. Please try again shortly.</p>
+    ) : result?.docs.length ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {result.docs.map(post => (
+          <a href={`/mango-bytes/${encodeURIComponent(post.slug)}`} class="block bg-background-alt border border-border p-6 hover:border-mango-green-dark transition-colors focus-visible:outline-2 focus-visible:outline-offset-4">
+            <div class="flex justify-between gap-4 text-sm mb-4">
+              <span class="text-mango-green-dark font-semibold uppercase tracking-wider">Byte</span>
+              {formatMangoDate(post.publishedAt) && <time datetime={post.publishedAt!} class="text-muted">{formatMangoDate(post.publishedAt)}</time>}
+            </div>
+            <h2 class="font-bold text-xl mb-4">{post.title}</h2>
+            {post.meta?.description && <p class="text-muted mb-6">{post.meta.description}</p>}
+            <span class="text-mango-green-dark font-semibold">Read byte →</span>
+          </a>
+        ))}
+      </div>
+    ) : <p class="text-muted">No articles found on this page.</p>}
+    {result && (result.hasPrevPage || result.hasNextPage) && (
+      <nav aria-label="Mango Bytes pagination" class="flex flex-wrap items-center gap-6 mt-10">
+        {result.hasPrevPage && <a rel="prev" href={`/mango-bytes?page=${currentPage - 1}`} class="text-mango-green-dark font-semibold hover:underline">← Previous</a>}
+        <span class="text-muted">Page {currentPage} of {result.totalPages}</span>
+        {result.hasNextPage && <a rel="next" href={`/mango-bytes?page=${currentPage + 1}`} class="text-mango-green-dark font-semibold hover:underline">Next →</a>}
+      </nav>
+    )}
+  </main>
+</Layout>

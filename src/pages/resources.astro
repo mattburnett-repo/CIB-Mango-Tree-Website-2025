@@ -7,7 +7,8 @@ import {
   Newspaper,
   HelpCircle,
 } from "@lucide/astro";
-import { API_URL } from "@utils/constants/url";
+import { getMangoBytes, formatMangoDate, type MangoByte } from "@lib/mangoBytes";
+export const prerender = false;
 import Layout from "@layouts/Layout.astro";
 import AstroBlockRenderer from "@components/AstroBlockRenderer.astro";
 import Newsletter from "@components/Newsletter.astro";
@@ -48,37 +49,16 @@ const [pageData, researchSourceData]: [
     collection: "researchSources",
   }),
 ]);
-interface MangoByte {
-  id: string | number;
-  title: string;
-  slug: string;
-  meta?: {
-  description?: string | null;
-};
-  publishedAt?: string;
-}
-
 let mangoBytes: MangoByte[] = [];
-
+let mangoBytesFailed = false;
+let hasMoreMangoBytes = false;
 try {
-  const params = new URLSearchParams({
-    "where[slug][equals]": slug,
-    "where[_status][equals]": "published",
-    "where[categories][contains]": "1",
-    limit: "1",
-    depth: "1",
-  });
-
-  const response = await fetch(`${API_URL}/api/posts?${params}`);
-
-  if (response.ok) {
-    const data: { docs?: MangoByte[] } = await response.json();
-    post = data.docs?.[0] ?? null;
-  } else {
-    console.warn(`Mango Byte CMS returned ${response.status}`);
-  }
+  const result = await getMangoBytes({ limit: 4 });
+  mangoBytes = result.docs;
+  hasMoreMangoBytes = result.hasNextPage;
 } catch (error) {
-  console.error("Unable to fetch Mango Byte:", error);
+  console.error("Unable to load Mango Bytes:", error);
+  mangoBytesFailed = true;
 }
 
 if (pageData.status === "rejected" || researchSourceData.status === "rejected")
@@ -356,35 +336,44 @@ const navItems = [
               </h2>
             
               <p class="text-muted mb-8">
-                Bite-sized snapshots of coordinated inauthentic behavior examples, campaigns, and tactics in the news.
+                Bite-sized analysis of coordinated inauthentic behavior, emerging tactics,
+                and efforts to detect manipulation online.
               </p>
             
-              {mangoBytes.length === 0 && (
-                <p class="text-muted mb-6">Mango Bytes snapshots are coming soon.</p>
+              {mangoBytesFailed && (<p role="status" class="text-muted mb-6">We couldn’t load the articles. Please try again shortly.</p>)}
+              {!mangoBytesFailed && mangoBytes.length === 0 && (
+                <p class="text-muted mb-6">Mango Bytes articles are coming soon.</p>
               )}
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {mangoBytes.map((post) => (
                   <a
-                    href={`/mango-bytes/${post.slug}`}
+                    href={`/mango-bytes/${encodeURIComponent(post.slug)}`}
                     class="group bg-background-alt p-6 border-l-4 border-mango-green-dark hover:border-mango-yellow transition-all"
                   >
+                    <div class="flex justify-between gap-4 text-sm mb-4">
+                      <span class="text-mango-green-dark font-semibold uppercase tracking-wider">Byte</span>
+                      {formatMangoDate(post.publishedAt) && <time datetime={post.publishedAt!} class="text-muted">{formatMangoDate(post.publishedAt)}</time>}
+                    </div>
                     <h3 class="font-bold text-lg mb-3">
                       {post.title}
                     </h3>
             
                     {post.meta?.description && (
                       <p class="text-muted text-sm mb-4">
-                        {post.meta.description}
+                        {post.meta?.description}
                       </p>
                     )}
             
                     <span class="text-mango-green-dark font-semibold text-sm">
-                      Read more →
+                      Read byte →
                     </span>
                   </a>
                 ))}
               </div>
+              {hasMoreMangoBytes && (
+                <a href="/mango-bytes" class="inline-flex mt-6 text-mango-green-dark font-semibold hover:underline">View all Mango Bytes →</a>
+              )}
             </div>
           <!-- Research Papers - Compact 2-column grid -->
           <div id="research" class="mb-20 scroll-mt-24">

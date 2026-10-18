@@ -7,6 +7,7 @@ import {
   Newspaper,
   HelpCircle,
 } from "@lucide/astro";
+import { API_URL } from "@utils/constants/url";
 import Layout from "@layouts/Layout.astro";
 import AstroBlockRenderer from "@components/AstroBlockRenderer.astro";
 import Newsletter from "@components/Newsletter.astro";
@@ -47,6 +48,34 @@ const [pageData, researchSourceData]: [
     collection: "researchSources",
   }),
 ]);
+interface MangoByte {
+  id: string | number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  publishedAt?: string;
+}
+
+let mangoBytes: MangoByte[] = [];
+
+try {
+  const params = new URLSearchParams({
+    "where[status][equals]": "published",
+    sort: "-publishedAt",
+    limit: "20",
+  });
+
+  const response = await fetch(`${API_URL}/api/mango-bytes?${params}`);
+
+  if (response.ok) {
+    const data: { docs?: MangoByte[] } = await response.json();
+    mangoBytes = data.docs ?? [];
+  } else {
+    console.warn(`Mango Bytes CMS returned ${response.status}`);
+  }
+} catch (error) {
+  console.error("Unable to fetch Mango Bytes:", error);
+}
 
 if (pageData.status === "rejected" || researchSourceData.status === "rejected")
   throw Error("http request to the CMS for page data failed...");
@@ -241,6 +270,7 @@ const glossaryTerms = [
 const navItems = [
   { id: "understanding", label: "Understanding CIB", icon: "HelpCircle" },
   { id: "blog", label: "From Our Blog", icon: "Newspaper" },
+  { id: "mango-bytes", label: "Mango Bytes", icon: "Newspaper" },
   { id: "research", label: "Research Papers", icon: "FileText" },
   { id: "tools", label: "Additional Tools", icon: "BookOpen" },
   { id: "datasets", label: "Datasets", icon: "Database" },
@@ -314,7 +344,44 @@ const navItems = [
             </h2>
             <BlogFeatured posts={blogPosts} />
           </div>
+          <!-- Mango Bytes Section -->
+            <div id="mango-bytes" class="mb-20 scroll-mt-24">
+              <h2 class="font-bold text-3xl mb-8 flex items-center gap-3">
+                <Newspaper class="w-8 h-8 text-mango-green-dark" />
+                Mango Bytes
+              </h2>
+            
+              <p class="text-muted mb-8">
+                Short insights and updates from the CIB Mango Tree community.
+              </p>
+            
+              {mangoBytes.length === 0 && (
+                <p class="text-muted mb-6">Mango Bytes articles are coming soon.</p>
+              )}
 
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {mangoBytes.map((post) => (
+                  <a
+                    href={`/mango-bytes/${post.slug}`}
+                    class="group bg-background-alt p-6 border-l-4 border-mango-green-dark hover:border-mango-yellow transition-all"
+                  >
+                    <h3 class="font-bold text-lg mb-3">
+                      {post.title}
+                    </h3>
+            
+                    {post.excerpt && (
+                      <p class="text-muted text-sm mb-4">
+                        {post.excerpt}
+                      </p>
+                    )}
+            
+                    <span class="text-mango-green-dark font-semibold text-sm">
+                      Read more →
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </div>
           <!-- Research Papers - Compact 2-column grid -->
           <div id="research" class="mb-20 scroll-mt-24">
             <h2 class="font-bold text-3xl mb-8 flex items-center gap-3">

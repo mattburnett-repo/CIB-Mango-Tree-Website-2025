@@ -1,0 +1,80 @@
+---
+import Layout from "@layouts/Layout.astro";
+import AstroBlockRenderer from "@components/AstroBlockRenderer.astro";
+import { API_URL } from "@utils/constants/url";
+import type { SerializedEditorState } from "@payloadcms/richtext-lexical/lexical";
+
+interface MangoByte {
+  id: string | number;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  publishedAt?: string;
+  content?: SerializedEditorState;
+}
+
+const { slug } = Astro.params;
+
+if (!slug) {
+  return Astro.redirect("/resources#mango-bytes");
+}
+
+let post: MangoByte | null = null;
+
+try {
+  const params = new URLSearchParams({
+    "where[slug][equals]": slug,
+    "where[status][equals]": "published",
+    limit: "1",
+  });
+
+  const response = await fetch(`${API_URL}/api/mango-bytes?${params}`);
+
+  if (response.ok) {
+    const data: { docs?: MangoByte[] } = await response.json();
+    post = data.docs?.[0] ?? null;
+  } else {
+    console.warn(`Mango Byte CMS returned ${response.status}`);
+  }
+} catch (error) {
+  console.error("Unable to fetch Mango Byte:", error);
+}
+
+if (!post) {
+  return Astro.redirect("/resources#mango-bytes");
+}
+
+const article: MangoByte = post;
+---
+
+<Layout>
+  <main class="max-w-3xl mx-auto px-6 py-16">
+    <a href="/resources#mango-bytes" class="text-mango-green-dark font-semibold">
+      ← Back to Resources
+    </a>
+
+    <article class="mt-10">
+      <h1 class="text-4xl md:text-5xl font-bold mb-6">{article.title}</h1>
+
+      {article.publishedAt && (
+        <p class="text-muted text-sm mb-6">
+          {new Date(article.publishedAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </p>
+      )}
+
+      {article.excerpt && (
+        <p class="text-xl text-muted leading-relaxed mb-10">{article.excerpt}</p>
+      )}
+
+      {article.content && (
+        <div class="max-w-none">
+          <AstroBlockRenderer data={article.content} />
+        </div>
+      )}
+    </article>
+  </main>
+</Layout>

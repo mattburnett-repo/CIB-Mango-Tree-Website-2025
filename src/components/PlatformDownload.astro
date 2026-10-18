@@ -15,7 +15,7 @@ interface Props {
 const { platforms } = Astro.props;
 ---
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     {platforms?.map((platform, index) => (
         <div 
           class="bg-white border-2 border-border p-6 md:p-8 flex flex-col items-center text-center opacity-0 animate-fade-in-scale transition-all transform-gpu duration-300 ease-default group/card hover:border-[#5A8A4A] hover:shadow-[0_1.0rem_2.50rem_rgba(90,138,74,0.2)] hover:-translate-y-2"

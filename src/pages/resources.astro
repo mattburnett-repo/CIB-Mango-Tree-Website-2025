@@ -52,7 +52,9 @@ interface MangoByte {
   id: string | number;
   title: string;
   slug: string;
-  excerpt?: string;
+  meta?: {
+  description?: string | null;
+};
   publishedAt?: string;
 }
 
@@ -60,12 +62,14 @@ let mangoBytes: MangoByte[] = [];
 
 try {
   const params = new URLSearchParams({
-    "where[status][equals]": "published",
-    sort: "-publishedAt",
-    limit: "20",
-  });
+  "where[_status][equals]": "published",
+  "where[categories][contains]": "1",
+  sort: "-publishedAt",
+  limit: "20",
+  depth: "1",
+});
 
-  const response = await fetch(`${API_URL}/api/mango-bytes?${params}`);
+const response = await fetch(`${API_URL}/api/posts?${params}`);
 
   if (response.ok) {
     const data: { docs?: MangoByte[] } = await response.json();

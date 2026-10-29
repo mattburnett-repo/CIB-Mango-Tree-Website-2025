@@ -41,23 +41,23 @@ const { platforms } = Astro.props;
                 </p>
             )}
             
-            <!-- Download Button -->
-            <DownloadButton 
-              href={platform.downloadLink} 
-              class="bg-mango-yellow w-full hover:bg-[#FFD966] hover:-translate-y-0.5 hover:shadow-[0_0.25rem_0.75rem_rgba(255,224,102,0.4)] px-6 py-3"
-            >
-              Download
-            </DownloadButton>
-           
-            <!-- File Name -->
-            <span class="text-xs text-light mt-2">
-                {platform.fileName}
-            </span>
+            <!-- Download footer: pinned to bottom; reserved filename height keeps buttons aligned -->
+            <div class="mt-auto w-full flex flex-col items-center">
+              <DownloadButton 
+                href={platform.downloadLink} 
+                class="bg-mango-yellow w-full hover:bg-[#FFD966] hover:-translate-y-0.5 hover:shadow-[0_0.25rem_0.75rem_rgba(255,224,102,0.4)] px-6 py-3"
+              >
+                Download
+              </DownloadButton>
 
-            <!-- File Size -->
-            <span class="text-xs text-light mt-2">
+              <span class="text-xs text-light mt-2 w-full min-h-[2.5rem] break-all">
+                {platform.fileName}
+              </span>
+
+              <span class="text-xs text-light mt-2">
                 {platform.fileSize}
-            </span>
+              </span>
+            </div>
         </div>
     ))}
 </div>
